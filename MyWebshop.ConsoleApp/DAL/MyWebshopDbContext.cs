@@ -11,6 +11,8 @@ public class MyWebshopDbContext : DbContext
     public DbSet<PhysicalProduct> PhysicalProducts { get; set; }
     public DbSet<DigitalProduct> DigitalProducts { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<ProductCategory> ProductCategories { get; set; }
 
     public MyWebshopDbContext(DbContextOptions<MyWebshopDbContext> options) : base(options)
     {
@@ -27,5 +29,7 @@ public class MyWebshopDbContext : DbContext
 
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductCategoryConfiguration());
     }
 }

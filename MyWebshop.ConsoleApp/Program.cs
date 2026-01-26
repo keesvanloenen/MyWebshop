@@ -15,11 +15,12 @@ internal class Program
 
         InitializeDb(options);
         DataSeed(options);
-        
+
         // ShowCustomers(options);
         // ShowProducts(options);
         // ShowProductsMichelAlternative(options);
-        ShowOrders(options);
+        // ShowOrders(options);
+        ShowCategories(options);
     }
 
     private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
@@ -62,6 +63,42 @@ internal class Program
         var digitalProduct2 = new DigitalProduct { Name = "LINQ Course", Price = 49.99m, FileSizeInMB = 1200 };
 
         context.Products.AddRange([physicalProduct1, physicalProduct2, digitalProduct1, digitalProduct2]);
+        context.SaveChanges();
+
+        var electronics = new Category { Name = "Electronics" };
+        var software = new Category { Name = "Software" };
+        var accessories = new Category { Name = "Accessories" };
+        
+        context.Categories.AddRange([electronics, software, accessories]);
+
+        context.ProductCategories.AddRange([
+            new ProductCategory { 
+                Product = physicalProduct1, 
+                Category = electronics, 
+                AddedOn = DateTime.Now.AddDays(-10) 
+            },
+            new ProductCategory { 
+                Product = physicalProduct2, 
+                Category = electronics, 
+                AddedOn = DateTime.Now.AddDays(-1) 
+            },
+            new ProductCategory { 
+                Product = physicalProduct2, 
+                Category = accessories, 
+                AddedOn = DateTime.Now.AddDays(-22) 
+            },
+            new ProductCategory { 
+                Product = digitalProduct1, 
+                Category = software, 
+                AddedOn = DateTime.Now.AddDays(-7) 
+            },
+            new ProductCategory { 
+                Product = digitalProduct2, 
+                Category = software, 
+                AddedOn = DateTime.Now.AddDays(-5) 
+            }
+        ]);
+
         context.SaveChanges();
     }
 
@@ -142,5 +179,25 @@ internal class Program
             Console.WriteLine($"[{order.Id}] {order.OrderDate} {order.TotalAmount, 7} (CustomerId: {order.CustomerId}) - Customer: {order.Customer.Name}");
         }
 
+    }
+
+    private static void ShowCategories(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        var categories = context.Categories
+            .Include(c => c.ProductCategories)
+            .ThenInclude(pc => pc.Product);
+
+        foreach (var category in categories)
+        {
+            Console.WriteLine($"[{category.Id}] {category.Name}");
+
+            foreach (var productCategory in category.ProductCategories)
+            {
+                var product = productCategory.Product;
+                Console.WriteLine($"\t[{product.Id}] {product.Name} {product.Price:C}");
+            }
+        }
     }
 }
