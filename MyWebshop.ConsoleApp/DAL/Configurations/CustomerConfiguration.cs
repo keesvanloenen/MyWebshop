@@ -24,7 +24,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.Property(c => c.CreatedAt)
             .HasColumnType("datetime2(0)")
-            .HasDefaultValueSql("SYSDATETIME()")
+            .HasDefaultValueSql("SYSUTCDATETIME()")
             // .ValueGeneratedOnAdd()      // niet nodig hier, .HasDefaultValueSql impliceert het al
             .IsRequired();
     }

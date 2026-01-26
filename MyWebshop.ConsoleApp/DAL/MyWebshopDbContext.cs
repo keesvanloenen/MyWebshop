@@ -7,6 +7,9 @@ namespace MyWebshop.ConsoleApp.DAL;
 public class MyWebshopDbContext : DbContext
 {
     public DbSet<Customer> Customers { get; set; }
+    public DbSet<Product> Products { get; set; }        // only requirement for TPH
+    public DbSet<PhysicalProduct> PhysicalProducts { get; set; }
+    public DbSet<DigitalProduct> DigitalProducts { get; set; }
 
     public MyWebshopDbContext(DbContextOptions<MyWebshopDbContext> options) : base(options)
     {
@@ -22,5 +25,6 @@ public class MyWebshopDbContext : DbContext
         base.OnModelCreating(modelBuilder);     // keep at top
 
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductConfiguration());
     }
 }
