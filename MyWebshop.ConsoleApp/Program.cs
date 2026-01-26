@@ -16,11 +16,11 @@ internal class Program
         InitializeDb(options);
         DataSeed(options);
         
-        ShowCustomers(options);
-        ShowProducts(options);
-        ShowProductsMichelAlternative(options);
+        // ShowCustomers(options);
+        // ShowProducts(options);
+        // ShowProductsMichelAlternative(options);
+        ShowOrders(options);
     }
-
 
     private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
     {
@@ -47,7 +47,13 @@ internal class Program
         var customer2 = new Customer { Name = "Bo" };
         var customer3 = new Customer { Name = "Cas" };
 
+
+        customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-4), TotalAmount = 450.00m });
+        customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-7), TotalAmount = 190});
+        customer2.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-1), TotalAmount = 27.50m });
+        
         context.Customers.AddRange([customer1, customer2, customer3]);
+
         context.SaveChanges();
 
         var physicalProduct1 = new PhysicalProduct { Name = "Laptop", Price = 999.99m, Weight = 1.5m };
@@ -118,5 +124,23 @@ internal class Program
         {
             Console.WriteLine($"[{d.Id}] {d.Name} - {d.Price:C} | Size = {d.FileSizeInMB} MB");
         }
+    }
+    
+    private static void ShowOrders(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        var orders = context.Orders.
+            Include(o => o.Customer);
+
+        foreach (var order in orders)
+        {
+            // If CustomerId is a shadow property you would have to use the special `Entry` API (more on day 3):
+            // var customerId = context.Entry(order).Property<int>("CustomerId").CurrentValue;
+            // Console.WriteLine($"[{order.Id}] {order.OrderDate} {order.TotalAmount} (CustomerId: {customerId}) - Customer: {order.Customer.Name}");
+
+            Console.WriteLine($"[{order.Id}] {order.OrderDate} {order.TotalAmount, 7} (CustomerId: {order.CustomerId}) - Customer: {order.Customer.Name}");
+        }
+
     }
 }

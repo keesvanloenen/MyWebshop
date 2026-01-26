@@ -27,5 +27,11 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasDefaultValueSql("SYSUTCDATETIME()")
             // .ValueGeneratedOnAdd()      // niet nodig hier, .HasDefaultValueSql impliceert het al
             .IsRequired();
+
+
+        builder.HasMany(c => c.Orders)
+            .WithOne(o => o.Customer)
+            .HasForeignKey(o => o.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

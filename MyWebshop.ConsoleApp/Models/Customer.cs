@@ -7,4 +7,7 @@ public class Customer
     public string? PhoneNumber { get; set; }    // ? = optional
     public decimal CreditLimit { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation property to Orders (one-to-many)
+    public ICollection<Order> Orders { get; set; } = [];
 }

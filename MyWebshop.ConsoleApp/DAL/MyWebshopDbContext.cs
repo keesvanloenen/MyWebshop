@@ -10,6 +10,7 @@ public class MyWebshopDbContext : DbContext
     public DbSet<Product> Products { get; set; }        // only requirement for TPH
     public DbSet<PhysicalProduct> PhysicalProducts { get; set; }
     public DbSet<DigitalProduct> DigitalProducts { get; set; }
+    public DbSet<Order> Orders { get; set; }
 
     public MyWebshopDbContext(DbContextOptions<MyWebshopDbContext> options) : base(options)
     {
