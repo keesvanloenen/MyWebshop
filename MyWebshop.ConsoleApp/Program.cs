@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.VisualBasic;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
@@ -9,13 +10,21 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        var options = new DbContextOptionsBuilder<MyWebshopDbContext>()
-            .UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=MyWebshop;ConnectRetryCount=0")
-            .Options;
+        var options = BuildContextOptions();
 
         InitializeDb(options);
         DataSeed(options);
         ShowCustomers(options);
+    }
+
+    private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
+    {
+        var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+        var config = builder.Build();
+
+        return new DbContextOptionsBuilder<MyWebshopDbContext>()
+            .UseSqlServer(config.GetConnectionString("DefaultConn"))
+            .Options;
     }
 
     private static void DataSeed(DbContextOptions<MyWebshopDbContext> options)
@@ -41,12 +50,11 @@ internal class Program
     {
         using var context = new MyWebshopDbContext(options);
 
-        var customers = context.Customers.Where(c => c.Name.EndsWith('s'));
+        var customers = context.Customers;
 
         foreach (var customer in customers) 
         {
             Console.WriteLine($"[{customer.Id}] {customer.Name}");
         }
-        
     }
 }
