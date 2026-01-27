@@ -23,90 +23,12 @@ internal class Program
         DataSeed(options);
 
         // ShowCustomers(options);
-        ShowCustomer(options);
+        // ShowCustomer(options);
         // ShowProducts(options);
         // ShowProductsMichelAlternative(options);
         // ShowOrders(options);
         // ShowCategories(options);
-        ServerSideClientSide(options);
-    }
-
-    private static void ServerSideClientSide(DbContextOptions<MyWebshopDbContext> options)
-    {
-        using var context = new MyWebshopDbContext(options);
-
-        // IsVowelName cannot be converted to SQL syntax, so
-        // add .AsEnumerable() after the first .Where()
-        
-        //var customers = context.Customers
-        //    .AsNoTracking()
-        //    .Where(c => c.Name.Length > 2)
-        //    .AsEnumerable()
-        //    .Where(c => c.Name.IsVowelName())
-        //    .Select(c => new { c.Id, NameUpper = c.Name.ToUpper() });
-
-        // No difference:
-        var customersA = context.Customers
-            .AsNoTracking()
-            .Where(c => c.Name.Length > 2 && c.Name.StartsWith('E'));
-
-        var customersB = context.Customers
-            .AsNoTracking()
-            .Where(c => c.Name.Length > 2)
-            .Where(c => c.Name.StartsWith('E'));
-
-
-        Console.WriteLine(customersA.ToQueryString());
-        Console.WriteLine(customersB.ToQueryString());
-
-        //Console.WriteLine(customers.ToQueryString());
-
-        //foreach (var customer in customers)
-        //{
-        //    Console.WriteLine($"{customer.Id}: {customer.NameUpper}");
-        //}
-    }
-
-    //private static bool IsVowelName(string name)
-    //{
-    //    char firstLetter = char.ToLower(name[0]);
-    //    return firstLetter is 'a' or 'e' or 'i' or 'o' or 'u';
-    //}
-
-    private static void ShowCustomer(DbContextOptions<MyWebshopDbContext> options)
-    {
-        using var context = new MyWebshopDbContext(options);
-
-        // FirstOrDefault: found entity or null
-        Customer? customer1 = context.Customers.FirstOrDefault(c => c.Id == 5);
-        Console.WriteLine($"Found: {customer1?.Name ?? "nothing"}");
-
-        // First: found entity or exception
-        Customer customer2 = context.Customers.First(c => c.Id == 5);
-        Console.WriteLine($"Found: {customer2.Name}");
-
-        // SingleOrDefault: found entity or null (exception when more than 1)
-        Customer? customer3 = context.Customers.SingleOrDefault(c => c.Name.Length == 6);
-        Console.WriteLine($"Found: {customer3?.Name ?? "nothing"}");
-        // Change into 2 leads to exception!
-
-        // Single: exception when not found + exception when more than 1
-        Customer customer4 = context.Customers.Single(c => c.Name.Length == 6);
-        Console.WriteLine($"Found: {customer4.Name}");
-
-        // Find: like FirstOrDefault, but with only an identifier!
-        Customer? customer5 = context.Customers.Find(5);
-        Console.WriteLine($"Found: {customer5?.Name ?? "nothing"}");
-    }
-
-    private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
-    {
-        var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-        var config = builder.Build();
-
-        return new DbContextOptionsBuilder<MyWebshopDbContext>()
-            .UseSqlServer(config.GetConnectionString("DefaultConn"))
-            .Options;
+        // ServerSideClientSide(options);
     }
 
     private static void InitializeDb(DbContextOptions<MyWebshopDbContext> options)
@@ -115,7 +37,7 @@ internal class Program
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
     }
-
+    
     private static void DataSeed(DbContextOptions<MyWebshopDbContext> options)
     {
         using var context = new MyWebshopDbContext(options);
@@ -181,6 +103,16 @@ internal class Program
         context.SaveChanges();
     }
 
+    private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
+    {
+        var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+        var config = builder.Build();
+
+        return new DbContextOptionsBuilder<MyWebshopDbContext>()
+            .UseSqlServer(config.GetConnectionString("DefaultConn"))
+            .Options;
+    }
+    
     private static void ShowCustomers(DbContextOptions<MyWebshopDbContext> options)
     {
         using var context = new MyWebshopDbContext(options);
@@ -191,6 +123,32 @@ internal class Program
         {
             Console.WriteLine($"[{customer.Id}] {customer.Name}");
         }
+    }
+
+    private static void ShowCustomer(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        // FirstOrDefault: found entity or null
+        Customer? customer1 = context.Customers.FirstOrDefault(c => c.Id == 5);
+        Console.WriteLine($"Found: {customer1?.Name ?? "nothing"}");
+
+        // First: found entity or exception
+        Customer customer2 = context.Customers.First(c => c.Id == 5);
+        Console.WriteLine($"Found: {customer2.Name}");
+
+        // SingleOrDefault: found entity or null (exception when more than 1)
+        Customer? customer3 = context.Customers.SingleOrDefault(c => c.Name.Length == 6);
+        Console.WriteLine($"Found: {customer3?.Name ?? "nothing"}");
+        // Change into 2 leads to exception!
+
+        // Single: exception when not found + exception when more than 1
+        Customer customer4 = context.Customers.Single(c => c.Name.Length == 6);
+        Console.WriteLine($"Found: {customer4.Name}");
+
+        // Find: like FirstOrDefault, but with only an identifier!
+        Customer? customer5 = context.Customers.Find(5);
+        Console.WriteLine($"Found: {customer5?.Name ?? "nothing"}");
     }
 
     private static void ShowProducts(DbContextOptions<MyWebshopDbContext> options)
@@ -278,5 +236,47 @@ internal class Program
                 Console.WriteLine($"\t[{product.Id}] {product.Name} {product.Price:C}");
             }
         }
+    }
+
+    private static void ServerSideClientSide(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        // IsVowelName cannot be converted to SQL syntax, so
+        // add .AsEnumerable() after the first .Where()
+
+        //var customers = context.Customers
+        //    .AsNoTracking()
+        //    .Where(c => c.Name.Length > 2)
+        //    .AsEnumerable()
+        //    .Where(c => c.Name.IsVowelName())
+        //    .Select(c => new { c.Id, NameUpper = c.Name.ToUpper() });
+
+        // No difference:
+        var customersA = context.Customers
+            .AsNoTracking()
+            .Where(c => c.Name.Length > 2 && c.Name.StartsWith('E'));
+
+        var customersB = context.Customers
+            .AsNoTracking()
+            .Where(c => c.Name.Length > 2)
+            .Where(c => c.Name.StartsWith('E'));
+
+
+        Console.WriteLine(customersA.ToQueryString());
+        Console.WriteLine(customersB.ToQueryString());
+
+        //Console.WriteLine(customers.ToQueryString());
+
+        //foreach (var customer in customers)
+        //{
+        //    Console.WriteLine($"{customer.Id}: {customer.NameUpper}");
+        //}
+    }
+
+    private static bool IsVowelName(string name)
+    {
+        char firstLetter = char.ToLower(name[0]);
+        return firstLetter is 'a' or 'e' or 'i' or 'o' or 'u';
     }
 }
