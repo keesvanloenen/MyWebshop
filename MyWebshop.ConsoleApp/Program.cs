@@ -6,6 +6,12 @@ using System.Text;
 
 namespace MyWebshop.ConsoleApp;
 
+public static class MyExtensions
+{
+    public static bool IsVowelName(this string name) =>
+        char.ToLower(name[0]) is 'a' or 'e' or 'i' or 'o' or 'u';
+}
+
 internal class Program
 {
     static void Main(string[] args)
@@ -17,10 +23,80 @@ internal class Program
         DataSeed(options);
 
         // ShowCustomers(options);
+        ShowCustomer(options);
         // ShowProducts(options);
         // ShowProductsMichelAlternative(options);
         // ShowOrders(options);
-        ShowCategories(options);
+        // ShowCategories(options);
+        ServerSideClientSide(options);
+    }
+
+    private static void ServerSideClientSide(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        // IsVowelName cannot be converted to SQL syntax, so
+        // add .AsEnumerable() after the first .Where()
+        
+        //var customers = context.Customers
+        //    .AsNoTracking()
+        //    .Where(c => c.Name.Length > 2)
+        //    .AsEnumerable()
+        //    .Where(c => c.Name.IsVowelName())
+        //    .Select(c => new { c.Id, NameUpper = c.Name.ToUpper() });
+
+        // No difference:
+        var customersA = context.Customers
+            .AsNoTracking()
+            .Where(c => c.Name.Length > 2 && c.Name.StartsWith('E'));
+
+        var customersB = context.Customers
+            .AsNoTracking()
+            .Where(c => c.Name.Length > 2)
+            .Where(c => c.Name.StartsWith('E'));
+
+
+        Console.WriteLine(customersA.ToQueryString());
+        Console.WriteLine(customersB.ToQueryString());
+
+        //Console.WriteLine(customers.ToQueryString());
+
+        //foreach (var customer in customers)
+        //{
+        //    Console.WriteLine($"{customer.Id}: {customer.NameUpper}");
+        //}
+    }
+
+    //private static bool IsVowelName(string name)
+    //{
+    //    char firstLetter = char.ToLower(name[0]);
+    //    return firstLetter is 'a' or 'e' or 'i' or 'o' or 'u';
+    //}
+
+    private static void ShowCustomer(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        // FirstOrDefault: found entity or null
+        Customer? customer1 = context.Customers.FirstOrDefault(c => c.Id == 5);
+        Console.WriteLine($"Found: {customer1?.Name ?? "nothing"}");
+
+        // First: found entity or exception
+        Customer customer2 = context.Customers.First(c => c.Id == 5);
+        Console.WriteLine($"Found: {customer2.Name}");
+
+        // SingleOrDefault: found entity or null (exception when more than 1)
+        Customer? customer3 = context.Customers.SingleOrDefault(c => c.Name.Length == 6);
+        Console.WriteLine($"Found: {customer3?.Name ?? "nothing"}");
+        // Change into 2 leads to exception!
+
+        // Single: exception when not found + exception when more than 1
+        Customer customer4 = context.Customers.Single(c => c.Name.Length == 6);
+        Console.WriteLine($"Found: {customer4.Name}");
+
+        // Find: like FirstOrDefault, but with only an identifier!
+        Customer? customer5 = context.Customers.Find(5);
+        Console.WriteLine($"Found: {customer5?.Name ?? "nothing"}");
     }
 
     private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
@@ -47,13 +123,16 @@ internal class Program
         var customer1 = new Customer { Name = "Ab" };
         var customer2 = new Customer { Name = "Bo" };
         var customer3 = new Customer { Name = "Cas" };
+        var customer4 = new Customer { Name = "Dik" };
+        var customer5 = new Customer { Name = "Eduard" };
+        var customer6 = new Customer { Name = "Fe" };
 
 
         customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-4), TotalAmount = 450.00m });
         customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-7), TotalAmount = 190});
         customer2.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-1), TotalAmount = 27.50m });
-        
-        context.Customers.AddRange([customer1, customer2, customer3]);
+
+        context.Customers.AddRange([customer1, customer2, customer3, customer4, customer5, customer6]);
 
         context.SaveChanges();
 
