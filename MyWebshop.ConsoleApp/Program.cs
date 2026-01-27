@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using Microsoft.Extensions.Configuration;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
+using System.ComponentModel;
 using System.Text;
 
 namespace MyWebshop.ConsoleApp;
@@ -31,63 +34,20 @@ internal class Program
         // ShowCategories(options);
         // ServerSideClientSide(options);
 
-        //EagerLoadingCustomersAndOrders(options);
-        //EagerLoadingOnlyRecentOrderPerCustomer(options);
-        //ExplicitLoadingOrdersForCustomer(options);
+        // EagerLoadingCustomersAndOrders(options);
+        // EagerLoadingOnlyRecentOrderPerCustomer(options);
+        // ExplicitLoadingOrdersForCustomer(options);
 
-        OptimisticConcurrency(options);
+
+        // OptimisticConcurrency(options);
+
+        // FromSql(options);
+        // FromSql_StoredProcedure(options);
+        // FromSqlRaw(options);
+        // SqlQuery(options);
     }
 
-    private static void OptimisticConcurrency(DbContextOptions<MyWebshopDbContext> options)
-    {
-        var customerId = 1;
 
-        using var context = new MyWebshopDbContext(options);
-
-        try
-        {
-
-            // User 1
-            var customer = context.Customers.Find(customerId)!;
-            Console.WriteLine($"User 1 laadt: Credit = {customer.CreditLimit}");
-
-            // User 2 (ik mimick hier een concurrent user
-            context.Customers
-                .Where(c => c.Id == customerId)
-                .ExecuteUpdate(setters => setters
-                    .SetProperty(c => c.CreditLimit, 2000m)
-                );
-
-            Console.WriteLine("User 2 saved: Credit = 2000");
-
-            // User 1
-            customer.CreditLimit = 1500m;
-            context.SaveChanges();
-        }
-        catch(DbUpdateConcurrencyException ex)
-        {
-            Console.WriteLine($"⚠️ CONFLICT!");
-
-            foreach (var entry in ex.Entries)
-            {
-                if (entry.Entity is Customer conflictedCustomer)
-                {
-                    // Get current DB values
-                    var dbValues = entry.GetDatabaseValues()!;
-
-                    //// DB WINS
-                    //entry.CurrentValues.SetValues(dbValues);
-                    //Console.WriteLine("Changes discarded.");
-
-                    // CLIENT WINS
-                    entry.OriginalValues.SetValues(dbValues);
-                    context.SaveChanges();
-                    Console.WriteLine("✅ Client wins: €1500 saved.");
-
-                }
-            }
-        }
-    }
 
     private static void InitializeDb(DbContextOptions<MyWebshopDbContext> options)
     {
@@ -100,12 +60,12 @@ internal class Program
     {
         using var context = new MyWebshopDbContext(options);
 
-        var customer1 = new Customer { Name = "Ab" };
-        var customer2 = new Customer { Name = "Bo" };
-        var customer3 = new Customer { Name = "Cas" };
-        var customer4 = new Customer { Name = "Dik" };
-        var customer5 = new Customer { Name = "Eduard" };
-        var customer6 = new Customer { Name = "Fe" };
+        var customer1 = new Customer { Name = "Ab", PhoneNumber = "0611111111", CreditLimit = 2000.00m };
+        var customer2 = new Customer { Name = "Bo", PhoneNumber = "0622222222", CreditLimit = 2000.00m };
+        var customer3 = new Customer { Name = "Cas", PhoneNumber = "0633333333", CreditLimit = 1800.00m };
+        var customer4 = new Customer { Name = "Dik", PhoneNumber = "0644444444", CreditLimit = 1800.00m };
+        var customer5 = new Customer { Name = "Eduard", PhoneNumber = "0655555555", CreditLimit = 1600.00m };
+        var customer6 = new Customer { Name = "Fe", PhoneNumber = "0666666666", CreditLimit = 1600.00m };
 
 
         customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-4), TotalAmount = 450.00m });
@@ -159,6 +119,17 @@ internal class Program
         ]);
 
         context.SaveChanges();
+        
+        context.Database.ExecuteSql(
+            @$"CREATE OR ALTER PROCEDURE dbo.ShowLastOrderForCustomer
+                @customerId AS int
+            AS
+            BEGIN
+	            SELECT TOP 1 *
+	            FROM Orders AS o
+	            WHERE o.CustomerId = @customerId
+	            ORDER BY o.OrderDate DESC;
+            END");
     }
 
     private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
@@ -415,4 +386,129 @@ internal class Program
         }
     }
 
+    private static void OptimisticConcurrency(DbContextOptions<MyWebshopDbContext> options)
+    {
+        var customerId = 1;
+
+        using var context = new MyWebshopDbContext(options);
+
+        try
+        {
+
+            // User 1
+            var customer = context.Customers.Find(customerId)!;
+            Console.WriteLine($"User 1 laadt: Credit = {customer.CreditLimit}");
+
+            // User 2 (ik mimick hier een concurrent user
+            context.Customers
+                .Where(c => c.Id == customerId)
+                .ExecuteUpdate(setters => setters
+                    .SetProperty(c => c.CreditLimit, 2000m)
+                );
+
+            Console.WriteLine("User 2 saved: Credit = 2000");
+
+            // User 1
+            customer.CreditLimit = 1500m;
+            context.SaveChanges();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Console.WriteLine($"⚠️ CONFLICT!");
+
+            foreach (var entry in ex.Entries)
+            {
+                if (entry.Entity is Customer conflictedCustomer)
+                {
+                    // Get current DB values
+                    var dbValues = entry.GetDatabaseValues()!;
+
+                    //// DB WINS
+                    //entry.CurrentValues.SetValues(dbValues);
+                    //Console.WriteLine("Changes discarded.");
+
+                    // CLIENT WINS
+                    entry.OriginalValues.SetValues(dbValues);
+                    context.SaveChanges();
+                    Console.WriteLine("✅ Client wins: €1500 saved.");
+
+                }
+            }
+        }
+    }
+
+    private static void FromSql(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        //var customers = context.Customers
+        //    .FromSql($"SELECT * FROM Customers WHERE Name LIKE '%o'");
+
+        var filter = "%o";
+
+        var customers = context.Customers
+            .FromSql($"SELECT * FROM Customers WHERE Name LIKE {filter}");
+
+
+        Console.WriteLine(customers.ToQueryString());
+
+        foreach (var customer in customers)
+        {
+            Console.WriteLine($"{customer.Id} {customer.Name}");
+        }
+    }
+
+    private static void FromSql_StoredProcedure(DbContextOptions<MyWebshopDbContext> options)
+    {
+        var customerId = 2;
+
+        using var context = new MyWebshopDbContext(options);
+
+        var lastOrder = context.Orders
+            .FromSql($"EXECUTE dbo.ShowLastOrderForCustomer {customerId}")
+            .AsEnumerable()
+            .FirstOrDefault();
+
+        if (lastOrder is null) return;
+
+        Console.WriteLine($"Last order for customer {customerId}: {lastOrder.OrderDate} {lastOrder.TotalAmount}");
+    }
+
+    private static void FromSqlRaw(DbContextOptions<MyWebshopDbContext> options)
+    {
+        var columnName = "CreditLimit";     // Ensure the column name is sanitized!
+        var columnValue = new SqlParameter("columnValue", 1600m);
+
+        List<string> allowedColumns = ["CreditLimit", "Salary", "Expenses"];    // TODO separate method with whitelist
+        if (!allowedColumns.Contains(columnName))
+            throw new ArgumentException("Invalid column name!");
+
+        using var context = new MyWebshopDbContext(options);
+
+        var filteredCustomers = context.Customers
+            .FromSqlRaw($"SELECT * FROM Customers WHERE {columnName} = @columnValue", columnValue);
+
+        Console.WriteLine(filteredCustomers.ToQueryString());
+
+        foreach (var c in filteredCustomers)
+        {
+            Console.WriteLine(c.Name + ' ' + c.CreditLimit);
+        }
+
+
+    }
+
+    private static void SqlQuery(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        IQueryable<string> names = context.Database
+            .SqlQuery<string>($"Select Name FROM Customers");
+
+
+        foreach (var name in names)
+        {
+            Console.WriteLine(name);
+        }
+    }
 }
