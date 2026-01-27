@@ -29,6 +29,10 @@ internal class Program
         // ShowOrders(options);
         // ShowCategories(options);
         // ServerSideClientSide(options);
+
+        EagerLoadingCustomersAndOrders(options);
+        //EagerLoadingOnlyRecentOrderPerCustomer(options);
+        //ExplicitLoadingOrdersForCustomer(options);
     }
 
     private static void InitializeDb(DbContextOptions<MyWebshopDbContext> options)
@@ -279,4 +283,82 @@ internal class Program
         char firstLetter = char.ToLower(name[0]);
         return firstLetter is 'a' or 'e' or 'i' or 'o' or 'u';
     }
+
+    private static void EagerLoadingCustomersAndOrders(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        var customers = context.Customers
+            .AsNoTracking()
+            .Include(c => c.Orders);
+
+        // Console.WriteLine(customers.ToQueryString());
+
+        foreach (var customer in customers)
+        {
+            Console.WriteLine($"{customer.Name}");
+
+            foreach (var order in customer.Orders)
+            {
+                Console.WriteLine($"\t {order.OrderDate} {order.TotalAmount}");
+            }
+        }
+    }
+
+    private static void EagerLoadingOnlyRecentOrderPerCustomer(DbContextOptions<MyWebshopDbContext> options)
+    {
+        // You need related data only in certain scenarios, not always
+        // Initial query should be fast; load related data only when accessed
+
+        using var context = new MyWebshopDbContext(options);
+
+        var customers = context.Customers
+            .AsNoTracking()
+            .Include(c => c.Orders
+                .OrderByDescending(o => o.OrderDate)
+                .Take(1)
+            );
+
+        // Console.WriteLine(customers.ToQueryString());
+
+        foreach (var customer in customers)
+        {
+            Console.WriteLine($"{customer.Name}");
+
+            foreach (var order in customer.Orders)
+            {
+                Console.WriteLine($"\t {order.OrderDate} {order.TotalAmount}");
+            }
+        }
+    }
+
+    private static void ExplicitLoadingOrdersForCustomer(DbContextOptions<MyWebshopDbContext> options)
+    {
+        Console.Write("Vul het customerid in: ");
+        string input = Console.ReadLine() ?? string.Empty;
+
+        int customerId = int.Parse(input);
+
+        using var context = new MyWebshopDbContext(options);
+
+        Customer? customer = context.Customers.Find(customerId);
+
+        if (customer is null)
+        {
+            Console.WriteLine($"Customer met Id {customerId} niet gevonden.");
+            return;
+        }
+
+        context.Entry(customer)
+            .Collection(c => c.Orders)   // Use Reference to find eg. the Employee who handled the order
+            .Load();
+
+        Console.WriteLine($"Orders voor Customer {customerId}");
+
+        foreach (var order in customer.Orders)
+        {
+            Console.WriteLine($"\t[{order.Id}] {order.OrderDate:dd-MM-yyy} {order.TotalAmount:C}");
+        }
+    }
+
 }
