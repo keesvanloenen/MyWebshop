@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using Microsoft.Extensions.Configuration;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
@@ -30,9 +31,62 @@ internal class Program
         // ShowCategories(options);
         // ServerSideClientSide(options);
 
-        EagerLoadingCustomersAndOrders(options);
+        //EagerLoadingCustomersAndOrders(options);
         //EagerLoadingOnlyRecentOrderPerCustomer(options);
         //ExplicitLoadingOrdersForCustomer(options);
+
+        OptimisticConcurrency(options);
+    }
+
+    private static void OptimisticConcurrency(DbContextOptions<MyWebshopDbContext> options)
+    {
+        var customerId = 1;
+
+        using var context = new MyWebshopDbContext(options);
+
+        try
+        {
+
+            // User 1
+            var customer = context.Customers.Find(customerId)!;
+            Console.WriteLine($"User 1 laadt: Credit = {customer.CreditLimit}");
+
+            // User 2 (ik mimick hier een concurrent user
+            context.Customers
+                .Where(c => c.Id == customerId)
+                .ExecuteUpdate(setters => setters
+                    .SetProperty(c => c.CreditLimit, 2000m)
+                );
+
+            Console.WriteLine("User 2 saved: Credit = 2000");
+
+            // User 1
+            customer.CreditLimit = 1500m;
+            context.SaveChanges();
+        }
+        catch(DbUpdateConcurrencyException ex)
+        {
+            Console.WriteLine($"⚠️ CONFLICT!");
+
+            foreach (var entry in ex.Entries)
+            {
+                if (entry.Entity is Customer conflictedCustomer)
+                {
+                    // Get current DB values
+                    var dbValues = entry.GetDatabaseValues()!;
+
+                    //// DB WINS
+                    //entry.CurrentValues.SetValues(dbValues);
+                    //Console.WriteLine("Changes discarded.");
+
+                    // CLIENT WINS
+                    entry.OriginalValues.SetValues(dbValues);
+                    context.SaveChanges();
+                    Console.WriteLine("✅ Client wins: €1500 saved.");
+
+                }
+            }
+        }
     }
 
     private static void InitializeDb(DbContextOptions<MyWebshopDbContext> options)

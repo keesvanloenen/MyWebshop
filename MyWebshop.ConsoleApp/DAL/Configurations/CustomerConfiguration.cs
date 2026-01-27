@@ -28,5 +28,8 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             // .ValueGeneratedOnAdd()      // niet nodig hier, .HasDefaultValueSql impliceert het al
             .IsRequired();
 
+        builder.Property(c => c.RowVersion)
+            .IsRowVersion();
+
     }
 }
