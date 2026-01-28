@@ -45,9 +45,64 @@ internal class Program
         // FromSql_StoredProcedure(options);
         // FromSqlRaw(options);
         // SqlQuery(options);
+
+        // GroupBy(options);
+
+        InnerJoin(options);
     }
 
+    private static void InnerJoin(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
 
+        var customersAndOrders = context.Customers
+            .LeftJoin(               // can be changed into LeftJoin to retrieve Customers without Orders as well
+                context.Orders,
+                c => c.Id,           // left table
+                o => o.CustomerId,   // right table
+                (c, o) => new { Customer = c, Order = o }
+            );
+
+        Console.WriteLine(customersAndOrders.ToQueryString());
+
+        Console.WriteLine("----------------------------------------");
+
+        foreach (var co in customersAndOrders)
+        {
+            Console.WriteLine($"{co.Customer.Name}: {co.Order?.TotalAmount:C}");
+        }
+    }
+
+    private static void GroupBy(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        var customersByCredit = context.Customers
+            .GroupBy(c => c.CreditLimit)
+            .Where(g => g.Count() > 1)
+            .OrderByDescending(g => g.Key)
+            .Select(g => new
+            {
+                CreditLimit = g.Key,
+                Customers = g.ToList(),
+                NrOfCustomers = g.Count(),
+                LongestName = g.OrderByDescending(c => c.Name.Length).First().Name
+            });
+        //.ToList();   // materialize the query
+
+        Console.WriteLine(customersByCredit.ToQueryString());
+
+        Console.WriteLine("--------------------------------------------------------------------");
+        foreach (var group in customersByCredit)
+        {
+            Console.WriteLine($"{group.CreditLimit} (Langste Naam: {group.LongestName}) - Aantal Customers in deze groep: {group.NrOfCustomers}");
+
+            foreach (var customer in group.Customers)
+            {
+                Console.WriteLine($"\t{customer.Name}");
+            }
+        }
+    }
 
     private static void InitializeDb(DbContextOptions<MyWebshopDbContext> options)
     {
