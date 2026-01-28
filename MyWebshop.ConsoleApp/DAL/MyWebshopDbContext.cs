@@ -13,15 +13,24 @@ public class MyWebshopDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
+    public DbSet<Employee> Employees { get; set; }
 
     public MyWebshopDbContext(DbContextOptions<MyWebshopDbContext> options) : base(options)
     {
     }
 
-    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    //{
-    //    optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=MyWebshop;ConnectRetryCount=0");
-    //}
+    public MyWebshopDbContext()
+    {
+        // expected by migrations
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)   // the case for migrations
+        {
+            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=MyWebshop;ConnectRetryCount=0");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +40,9 @@ public class MyWebshopDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
         modelBuilder.ApplyConfiguration(new ProductCategoryConfiguration());
+
+
+        
     }
 
     public override int SaveChanges()

@@ -23,8 +23,8 @@ internal class Program
         Console.OutputEncoding = Encoding.UTF8;
         var options = BuildContextOptions();
 
-        InitializeDb(options);
-        DataSeed(options);
+        //InitializeDb(options);
+        //DataSeed(options);
 
         // ShowCustomers(options);
         // ShowCustomer(options);
@@ -237,17 +237,6 @@ internal class Program
         ]);
 
         context.SaveChanges();
-        
-        context.Database.ExecuteSql(
-            @$"CREATE OR ALTER PROCEDURE dbo.ShowLastOrderForCustomer
-                @customerId AS int
-            AS
-            BEGIN
-	            SELECT TOP 1 *
-	            FROM Orders AS o
-	            WHERE o.CustomerId = @customerId
-	            ORDER BY o.OrderDate DESC;
-            END");
     }
 
     private static DbContextOptions<MyWebshopDbContext> BuildContextOptions()
