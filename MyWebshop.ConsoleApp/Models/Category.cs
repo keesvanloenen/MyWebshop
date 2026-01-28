@@ -1,9 +1,10 @@
 ﻿namespace MyWebshop.ConsoleApp.Models;
 
-public class Category
+public class Category : IAuditable<AuditRecord>
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
+    public AuditRecord AuditRecord { get ; set; } = new();
 
     // Navigation property for many-to-many
     // public ICollection<Product> Products { get; set; } = [];

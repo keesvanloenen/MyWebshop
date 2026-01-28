@@ -1,6 +1,6 @@
 ﻿namespace MyWebshop.ConsoleApp.Models;
 
-public class Customer
+public class Customer : ISoftDeletable
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
@@ -9,6 +9,7 @@ public class Customer
     public DateTime CreatedAt { get; set; }
 
     public byte[] RowVersion { get; set; } = null!;
+    public bool IsDeleted { get; set; }
 
     // Navigation property to Orders (one-to-many)
     public ICollection<Order> Orders { get; set; } = [];

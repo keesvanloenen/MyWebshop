@@ -50,7 +50,34 @@ internal class Program
 
         // InnerJoin(options);
 
-        Attach(options);
+        // Attach(options);
+
+        //TestSoftDelete(options);
+        TestAudit(options);
+    }
+
+    private static void TestAudit(DbContextOptions<MyWebshopDbContext> options)
+    {
+        using var context = new MyWebshopDbContext(options);
+
+        var categoryToUpdate = context.Categories.Find(2)!;
+        categoryToUpdate.Name = "other name";
+        context.SaveChanges();
+    }
+
+    private static void TestSoftDelete(DbContextOptions<MyWebshopDbContext> options)
+    {
+        
+        using var context = new MyWebshopDbContext(options);
+
+        var customerToDelete = context.Customers.Find(4)!;
+
+
+
+        Console.WriteLine($"Delete user {customerToDelete.Name}");
+
+        context.Customers.Remove(customerToDelete);
+        context.SaveChanges();
     }
 
     private static void Attach(DbContextOptions<MyWebshopDbContext> options)

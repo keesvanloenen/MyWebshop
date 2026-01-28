@@ -32,4 +32,61 @@ public class MyWebshopDbContext : DbContext
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
         modelBuilder.ApplyConfiguration(new ProductCategoryConfiguration());
     }
+
+    public override int SaveChanges()
+    {
+        foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
+        {
+            if (entry.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+            }
+        }
+
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<IAuditable<AuditRecord>>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.AuditRecord.CreatedAt = now;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.AuditRecord.LastModifiedAt = now;
+            }
+        }
+
+
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<ISoftDeletable>())
+        {
+            if (entry.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+            }
+        }
+
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<IAuditable<AuditRecord>>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.AuditRecord.CreatedAt = now;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.AuditRecord.LastModifiedAt = now;
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }
