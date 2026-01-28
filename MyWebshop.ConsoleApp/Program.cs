@@ -48,8 +48,44 @@ internal class Program
 
         // GroupBy(options);
 
-        InnerJoin(options);
+        // InnerJoin(options);
+
+        Attach(options);
     }
+
+    private static void Attach(DbContextOptions<MyWebshopDbContext> options)
+    {
+        Customer customer;
+
+        using (var context = new MyWebshopDbContext(options))
+        {
+            customer = context.Customers.Find(2)!;
+            Console.WriteLine($"{customer.Name}: {customer.CreditLimit}");
+        }
+
+        using (var context = new MyWebshopDbContext(options))
+        {
+            //customer = context.Customers.Find(2)!;
+            //customer.CreditLimit += 100;
+            //context.SaveChanges();
+
+            //context.Attach(customer);
+            //context.Entry(customer).Property(c => c.CreditLimit).IsModified = true;
+            //customer!.CreditLimit += 100;
+            //context.SaveChanges();
+
+            //context.Attach(customer);
+            //customer!.CreditLimit += 100;
+            //context.SaveChanges();
+        }
+
+        using (var context = new MyWebshopDbContext(options))
+        {
+            customer = context.Customers.Find(2)!;
+            Console.WriteLine($"{customer.Name}: {customer.CreditLimit}");
+        }
+    }
+
 
     private static void InnerJoin(DbContextOptions<MyWebshopDbContext> options)
     {
