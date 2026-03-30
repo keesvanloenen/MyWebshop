@@ -20,30 +20,7 @@ public class WebshopContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Customer>()
-            .HasKey(c => c.Id);
-
-        modelBuilder.Entity<Customer>()
-            .Property(c => c.Name)
-            .HasMaxLength(100)
-            .IsRequired();
-
-        modelBuilder.Entity<Customer>()
-            .Property(c => c.PhoneNumber)
-            .HasMaxLength(20)
-            .IsRequired(false);
-
-        modelBuilder.Entity<Customer>()
-            .Property(c => c.CreditLimit)
-            .HasColumnType("decimal(18,2)")
-            .HasPrecision(18, 2);
-
-        modelBuilder.Entity<Customer>()
-            .Property(c => c.CreatedAt)
-            .HasColumnName("datetime2(0)")
-            .HasDefaultValueSql("SYSDATETIME()")
-            .IsRequired();
-    }    
+        base.OnModelCreating(modelBuilder);      // laten staan bovenin
+    }
+        
 }
