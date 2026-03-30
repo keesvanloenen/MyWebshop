@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyWebshop.ConsoleApp.DAL;
-using MyWebshop.ConsoleApp.Models;
 
 namespace MyWebshop.ConsoleApp;
 
@@ -19,7 +18,7 @@ internal class Program
     {
         CreateDB(options);
         WebShopInitializer.Seed(options);
-        ShowUsers(options);
+        ShowCustomers(options);
     }
 
     private static void CreateDB(DbContextOptions<WebshopContext> options)
@@ -29,15 +28,15 @@ internal class Program
         context.Database.EnsureCreated();
     }
 
-    private static void ShowUsers(DbContextOptions<WebshopContext> options)
+    private static void ShowCustomers(DbContextOptions<WebshopContext> options)
     {
         using var context = new WebshopContext(options);
 
-        var users = context.Users;
+        var customers = context.Customers;
 
-        foreach (var u in users)
+        foreach (var c in customers)
         {
-            Console.WriteLine($"{u.Id} - {u.Name}");
+            Console.WriteLine($"{c.Id} - {c.Name}, Credit Limit: { c.CreditLimit }, Phone: { c.PhoneNumber }");
         }
     }
 }

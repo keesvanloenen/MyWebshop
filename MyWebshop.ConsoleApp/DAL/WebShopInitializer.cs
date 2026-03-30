@@ -9,10 +9,10 @@ public class WebShopInitializer
 	{
 		using var context = new WebshopContext(options);
 
-		var user = new User() { Name = "Romeo", };
+		var customer = new Customer() { Name = "Romeo", CreditLimit = 150, PhoneNumber = "0612345678"};
 
-        context.Users.Add(user);        // Let the Change Tracker know: "Hey a new user should be added!"
-        context.SaveChanges();          // Persist to the database
+        context.Customers.Add(customer);  // Let the Change Tracker know: "Hey a new user should be added!"
+        context.SaveChanges();            // Persist to the database
 
     }
 }
