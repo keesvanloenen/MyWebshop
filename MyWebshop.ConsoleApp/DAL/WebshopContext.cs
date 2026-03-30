@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyWebshop.ConsoleApp.Models;
-using System.Net.WebSockets;
 
 namespace MyWebshop.ConsoleApp.DAL;
 
-internal class WebshopContext : DbContext
+public class WebshopContext : DbContext
 {
     public DbSet<User> Users { get; set; }
 

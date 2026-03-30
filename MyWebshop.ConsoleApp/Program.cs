@@ -17,14 +17,21 @@ internal class Program
 
     private static void Initialize(DbContextOptions<WebshopContext> options)
     {
+        CreateDB(options);
+        WebShopInitializer.Seed(options);
+        ShowUsers(options);
+    }
+
+    private static void CreateDB(DbContextOptions<WebshopContext> options)
+    {
         using var context = new WebshopContext(options);
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
+    }
 
-        var user = new User() { Name = "Romeo", };
-
-        context.Users.Add(user);        // Let the Change Tracker know: "Hey a new user should be added!"
-        context.SaveChanges();          // Persist to the database
+    private static void ShowUsers(DbContextOptions<WebshopContext> options)
+    {
+        using var context = new WebshopContext(options);
 
         var users = context.Users;
 
