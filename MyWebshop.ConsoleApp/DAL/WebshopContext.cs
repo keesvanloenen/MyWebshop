@@ -8,9 +8,16 @@ internal class WebshopContext : DbContext
 {
     public DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder builder)
+    // MANIER 2:
+    public WebshopContext(DbContextOptions<WebshopContext> options) : base(options)
     {
-        builder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Webshop;ConnectRetryCount=0");
-
     }
+    
+    // MANIER 1:
+    //protected override void OnConfiguring(DbContextOptionsBuilder builder)
+    //{
+    //    builder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Webshop;ConnectRetryCount=0");
+    //}
+
+
 }
