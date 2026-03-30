@@ -32,11 +32,16 @@ internal class Program
     {
         using var context = new WebshopContext(options);
 
-        var customers = context.Customers;
+        var customers = context.Customers.Include(c => c.Orders);
 
         foreach (var c in customers)
         {
             Console.WriteLine($"{c.Id} - {c.Name}, Credit Limit: { c.CreditLimit }, Phone: { c.PhoneNumber }");
+
+            foreach(var order in c.Orders)
+            {
+                Console.WriteLine($"\t - {order.Id} - {order.OrderDate} ({order.TotalAmount})");        
+            }
         }
     }
 }
