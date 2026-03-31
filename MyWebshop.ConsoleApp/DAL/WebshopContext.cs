@@ -8,7 +8,11 @@ public class WebshopContext : DbContext
 {
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<PhysicalProduct> PhysicalProducts { get; set; }
+    public DbSet<DigitalProduct> DigitalProducts { get; set; }
 
+    
     // MANIER 2: (de officiële manier, o.a. nodig bij migrations, unit tests etc.)
     public WebshopContext(DbContextOptions<WebshopContext> options) : base(options)
     {
@@ -25,5 +29,8 @@ public class WebshopContext : DbContext
         base.OnModelCreating(modelBuilder);      // laten staan bovenin
 
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+
+        modelBuilder.Entity<Product>()
+            .UseTpcMappingStrategy();
     }
 }
