@@ -22,8 +22,8 @@ internal class Program
     {
         CreateDB(options);
         WebShopInitializer.Seed(options);
-        // ShowCustomers(options);
-        ShowProducts(options);
+        ShowCustomers(options);
+        //ShowProducts(options);
     }
 
     private static void CreateDB(DbContextOptions<WebshopContext> options)
@@ -37,18 +37,35 @@ internal class Program
     {
         using var context = new WebshopContext(options);
 
-        var customers = context.Customers.Include(c => c.Orders);
+        var customers = context.Customers;
 
-        foreach (var c in customers)
-        {
-            Console.WriteLine($"{c.Id} - {c.Name}, Credit Limit: { c.CreditLimit }, Phone: { c.PhoneNumber }");
+        // First(): found entity or exception
+        // FirstOrDefault(): found entity or null
+        Customer? customer = customers.FirstOrDefault(c => c.Name.StartsWith("Bot"));
+        //if (customer == null)
+        //{
+        //    return;
+        //}
 
-            foreach(var order in c.Orders)
-            {
-                Console.WriteLine($"\t - {order.Id} - {order.OrderDate} ({order.TotalAmount})");        
-            }
-        }
-    }
+        Console.WriteLine(customer?.Name ?? "n/a");
+        // Single(): exception when not found & exception when more than 1
+        // SingleOrDefault(): found entity or exception when more than 1
+        Customer? customerB = customers.Find(3);
+
+        Console.WriteLine(customerB?.Name);
+
+        // ------------------------------------------------------------------------------
+
+        //var klanten = context.Customers.ToList().Where(c => IsVowelName(c.Name));
+
+        string deQuery = context.Customers
+            .Where(k => k.Name.Length < 3)
+            .OrderByDescending(k => k.Name)
+            .ThenByDescending(k => k.PhoneNumber)
+            .ToQueryString();
+
+        Console.WriteLine(deQuery);
+   }
 
     private static void ShowProducts(DbContextOptions<WebshopContext> options)
     {
@@ -66,5 +83,10 @@ internal class Program
             else if (product is DigitalProduct dp)
                 Console.WriteLine($", SIZE: {dp.FileSizeInMB} MB");
         }
+    }
+
+    private static bool IsVowelName(string name)
+    {
+        return name.Contains('a') || name.Contains('e');
     }
 }

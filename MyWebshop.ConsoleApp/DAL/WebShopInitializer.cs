@@ -9,11 +9,15 @@ public class WebShopInitializer
 	{
 		using var context = new WebshopContext(options);
 
-		var customer1 = new Customer() { Name = "Romeo", CreditLimit = 150, PhoneNumber = "0612345678"};
-		var customer2 = new Customer() { Name = "Mo", CreditLimit = 250, PhoneNumber = "0687654321"};
-
-        context.Customers.Add(customer1);  // Let the Change Tracker know: "Hey a new user should be added!"
-        context.Customers.Add(customer2);
+		var customer1 = new Customer() { Name = "Ab", CreditLimit = 150, PhoneNumber = "0612345678"};
+		var customer2 = new Customer() { Name = "Bo", CreditLimit = 250, PhoneNumber = "0687654321"};
+		var customer3 = new Customer() { Name = "Cas", CreditLimit = 250, PhoneNumber = "0687654321"};
+		var customer4 = new Customer() { Name = "Dik", CreditLimit = 250, PhoneNumber = "0687654321"};
+		var customer5 = new Customer() { Name = "Ed", CreditLimit = 250, PhoneNumber = "0687654321"};
+       
+        context.Customers.AddRange([customer1, customer2, customer3, customer4, customer5]);  // Let the Change Tracker know: "Hey a new user should be added!"
+        
+       
         context.SaveChanges();            // Persist to the database
 
         customer1.Orders.Add(new Order { OrderDate = DateTime.Now.AddDays(-4), TotalAmount = 450.00m });
