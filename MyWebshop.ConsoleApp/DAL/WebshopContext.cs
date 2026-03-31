@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyWebshop.ConsoleApp.DAL.Configurations;
 using MyWebshop.ConsoleApp.Models;
 
 namespace MyWebshop.ConsoleApp.DAL;
@@ -22,5 +23,7 @@ public class WebshopContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);      // laten staan bovenin
+
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
     }
 }

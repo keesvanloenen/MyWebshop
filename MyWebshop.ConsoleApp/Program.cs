@@ -8,7 +8,7 @@ internal class Program
     static void Main(string[] args)
     {
         var options = new DbContextOptionsBuilder<WebshopContext>()
-            .UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Webshop;ConnectRetryCount=0")
+            .UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Webshop;ConnectRetryCount=0;Integrated Security=true;")
             .Options;
 
         Initialize(options);
