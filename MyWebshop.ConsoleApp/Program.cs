@@ -44,9 +44,9 @@ internal class Program
 
         context.Entry(customer).Collection(c => c.Orders).Load();
 
+        Console.WriteLine($"Orders for Customer {customerId}:");
         foreach (var order in customer.Orders)
         {
-
             Console.WriteLine(order.Id + " " + order.OrderDate);
         }
 
