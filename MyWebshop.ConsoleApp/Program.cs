@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace MyWebshop.ConsoleApp;
@@ -22,8 +23,62 @@ internal class Program
     {
         CreateDB(options);
         WebShopInitializer.Seed(options);
-        ShowCustomers(options);
+        //ShowCustomers(options);
         //ShowProducts(options);
+        //ShowCustomersAndOrdersEagerLoading(options);
+        ShowCustomersAndOrdersExplicitLoading(options);
+    }
+
+    private static void ShowCustomersAndOrdersExplicitLoading(DbContextOptions<WebshopContext> options)
+    {
+        Console.Write("Welk customer id: ");        
+        var input = Console.ReadLine() ?? string.Empty;
+
+        var customerId = int.Parse(input);
+
+        using var context = new WebshopContext(options);
+
+        Customer? customer = context.Customers.Find(customerId);
+
+        if (customer == null) return;
+
+        context.Entry(customer).Collection(c => c.Orders).Load();
+
+        foreach (var order in customer.Orders)
+        {
+
+            Console.WriteLine(order.Id + " " + order.OrderDate);
+        }
+
+
+
+
+    }
+
+    private static void ShowCustomersAndOrdersEagerLoading(DbContextOptions<WebshopContext> options)
+    {
+        using var context = new WebshopContext(options);
+
+        var customers = context.Customers
+            .Include(c => c.Orders
+                            .OrderByDescending(o => o.OrderDate)
+                            .Take(1)
+             )
+            .AsNoTracking() 
+            .ToQueryString();
+
+        Console.WriteLine(customers);
+
+        //foreach(var customer in customers)
+        //{
+        //    Console.WriteLine(customer.Name);
+
+        //    foreach(var order in customer.Orders)
+        //    {
+        //        Console.WriteLine($"      {order.OrderDate}");
+        //    }
+        //}
+        
     }
 
     private static void CreateDB(DbContextOptions<WebshopContext> options)
