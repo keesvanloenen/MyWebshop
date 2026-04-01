@@ -9,11 +9,12 @@ public class WebShopInitializer
 	{
 		using var context = new WebshopContext(options);
 
-		var customer1 = new Customer() { Name = "Ab", CreditLimit = 150, PhoneNumber = "0612345678"};
-		var customer2 = new Customer() { Name = "Bo", CreditLimit = 250, PhoneNumber = "0687654321"};
-		var customer3 = new Customer() { Name = "Cas", CreditLimit = 250, PhoneNumber = "0687654321"};
-		var customer4 = new Customer() { Name = "Dik", CreditLimit = 250, PhoneNumber = "0687654321"};
-		var customer5 = new Customer() { Name = "Ed", CreditLimit = 250, PhoneNumber = "0687654321"};
+		var customer1 = new Customer() { Name = "Ab", CreditLimit = 2000, PhoneNumber = "0611111111"};
+		var customer2 = new Customer() { Name = "Bo", CreditLimit = 2000, PhoneNumber = "0622222222"};
+		var customer3 = new Customer() { Name = "Cas", CreditLimit = 1800, PhoneNumber = "0633333333"};
+		var customer4 = new Customer() { Name = "Dik", CreditLimit = 1800, PhoneNumber = "0644444444"};
+		var customer5 = new Customer() { Name = "Ed", CreditLimit = 1600, PhoneNumber = "0655555555"};
+		var customer6 = new Customer() { Name = "Fe", CreditLimit = 1600, PhoneNumber = "0666666666"};
        
         context.Customers.AddRange([customer1, customer2, customer3, customer4, customer5]);  // Let the Change Tracker know: "Hey a new user should be added!"
         
