@@ -16,7 +16,7 @@ public class WebShopInitializer
 		var customer5 = new Customer() { Name = "Ed", CreditLimit = 1600, PhoneNumber = "0655555555"};
 		var customer6 = new Customer() { Name = "Fe", CreditLimit = 1600, PhoneNumber = "0666666666"};
        
-        context.Customers.AddRange([customer1, customer2, customer3, customer4, customer5]);  // Let the Change Tracker know: "Hey a new user should be added!"
+        context.Customers.AddRange([customer1, customer2, customer3, customer4, customer5, customer6]);  // Let the Change Tracker know: "Hey a new user should be added!"
         
        
         context.SaveChanges();            // Persist to the database
@@ -33,5 +33,7 @@ public class WebShopInitializer
 
         context.Products.AddRange([physicalProduct1, physicalProduct2, digitalProduct1, digitalProduct2]);
         context.SaveChanges();
+
+
     }
 }

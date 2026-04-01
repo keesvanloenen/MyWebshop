@@ -1,7 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
+using System.Diagnostics.Metrics;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MyWebshop.ConsoleApp;
 
@@ -26,7 +29,63 @@ internal class Program
         //ShowProducts(options);
         //ShowCustomersAndOrdersEagerLoading(options);
         //ShowCustomersAndOrdersExplicitLoading(options);
-        OptimisticConcurrency(options);
+        //OptimisticConcurrency(options);
+        ExecuteSql(options);
+        // FromSql(options);
+        FromSqlRaw(options);
+    }
+
+    private static void FromSqlRaw(DbContextOptions<WebshopContext> options)
+    {
+        using var context = new WebshopContext(options);
+
+        var columnName = "CreditLimit";
+        var columnValue = "1600 OR 1 = 1 --";
+
+        var customers = context.Customers
+            .FromSqlRaw($"SELECT * FROM Customers WHERE {columnName} = {columnValue}");
+
+        Console.WriteLine(customers.ToQueryString());
+
+        foreach (var customer in customers)
+        {
+            Console.WriteLine(customer.Name);
+        }
+    }
+
+    private static void FromSql(DbContextOptions<WebshopContext> options)
+    {
+        using var context = new WebshopContext(options);
+        var filter = "%o";
+
+        var customers = context.Customers
+            .FromSql($"SELECT * FROM Customers WHERE Name LIKE {filter}");
+
+        Console.WriteLine(customers.ToQueryString());
+
+        foreach(var customer in customers)
+        {
+            Console.WriteLine(customer.Name);
+        }
+    }
+
+    private static void ExecuteSql(DbContextOptions<WebshopContext> options)
+    {
+        using var context = new WebshopContext(options);
+
+        context.Database.ExecuteSql(
+            $@"
+     CREATE OR ALTER PROCEDURE dbo.ShowLastOrderForCustomer
+       @customerId AS int
+     AS
+     BEGIN
+        SELECT TOP 1 *
+
+        FROM Orders AS o
+        WHERE o.CustomerId = @customerId
+        ORDER BY o.OrderDate;
+     END;");
+
     }
 
     private static void OptimisticConcurrency(DbContextOptions<WebshopContext> options)
@@ -78,7 +137,7 @@ internal class Program
 
             //Console.WriteLine(ex.Entries.Single());
 
-            foreach(var entry in ex.Entries)
+            foreach (var entry in ex.Entries)
             {
                 if (entry.Entity is Customer conflictedCustomer)
                 {
