@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyWebshop.ConsoleApp.DAL;
 using MyWebshop.ConsoleApp.Models;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace MyWebshop.ConsoleApp;
@@ -26,12 +25,90 @@ internal class Program
         //ShowCustomers(options);
         //ShowProducts(options);
         //ShowCustomersAndOrdersEagerLoading(options);
-        ShowCustomersAndOrdersExplicitLoading(options);
+        //ShowCustomersAndOrdersExplicitLoading(options);
+        OptimisticConcurrency(options);
+    }
+
+    private static void OptimisticConcurrency(DbContextOptions<WebshopContext> options)
+    {
+        int customerId = 1;
+
+        using var context = new WebshopContext(options);
+
+        // User 1
+        var customer = context.Customers.Find(customerId)!;
+        Console.WriteLine($"User 1 opgehaald, huidig CreditLimit = {customer.CreditLimit}");
+
+        // User 2
+        context.Customers
+            .Where(c => c.Id == customerId)
+            .ExecuteUpdate(setters => setters.SetProperty(c => c.CreditLimit, 10000m));
+        Console.WriteLine("User 2 saved: Credit = 10000");
+
+        try
+        {
+            customer.CreditLimit = 200m;
+            context.SaveChanges();
+
+            /*
+            Vera:
+            Hoe kan de exception gethrowed worden?
+            Dankzij de Concurrency Token!
+
+            Bovenstaande SaveChanges() voert immers onderstaande query uit:
+
+            UPDATE Customers
+            SET CreditLimit = 200
+            WHERE Id = 1 AND RowVersion = 0x00000000000007D7
+
+            Door de actie van User 2 heeft de RowVersion kolom een nieuwe waarde gekregen en 
+            wordt er niets geupdate en een exception gethrowd.
+
+            In de lab wordt geen database-specifieke RowVersion kolom gebruikt,
+            maar een zelf aangewezen kolom CreditLimit. Het update-statement ziet er dan ongeveer zo uit:
+
+            UPDATE Customers
+            SET CreditLimit = 200
+            WHERE Id = 1 AND CreditLimit = < oude_waarde >;     -- oude_waarde is hier 150
+            */
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Console.WriteLine($"💀 CONFLICT! {ex.Message}");
+
+            //Console.WriteLine(ex.Entries.Single());
+
+            foreach(var entry in ex.Entries)
+            {
+                if (entry.Entity is Customer conflictedCustomer)
+                {
+                    // Haal database values op
+                    var dbValues = entry.GetDatabaseValues();
+
+                    if (dbValues == null)
+                    {
+                        Console.WriteLine("De database values konden niet worden opgehaald gedurende het afhandelen van een concurrency conflict");
+                        return;
+                    }
+
+                    //// DB WINS ('user 1 wint')
+                    //entry.CurrentValues.SetValues(dbValues);
+                    //Console.WriteLine("Changes discarded!");
+
+                    // CLIENT WINS ('user 2 wint')
+                    entry.OriginalValues.SetValues(dbValues);
+                    context.SaveChanges();
+                    Console.WriteLine("✔️ Client wins: 10000 opgeslagen");
+
+
+                }
+            }
+        }
     }
 
     private static void ShowCustomersAndOrdersExplicitLoading(DbContextOptions<WebshopContext> options)
     {
-        Console.Write("Welk customer id: ");        
+        Console.Write("Welk customer id: ");
         var input = Console.ReadLine() ?? string.Empty;
 
         var customerId = int.Parse(input);
@@ -64,7 +141,7 @@ internal class Program
                             .OrderByDescending(o => o.OrderDate)
                             .Take(1)
              )
-            .AsNoTracking() 
+            .AsNoTracking()
             .ToQueryString();
 
         Console.WriteLine(customers);
@@ -78,7 +155,7 @@ internal class Program
         //        Console.WriteLine($"      {order.OrderDate}");
         //    }
         //}
-        
+
     }
 
     private static void CreateDB(DbContextOptions<WebshopContext> options)
@@ -120,7 +197,7 @@ internal class Program
             .ToQueryString();
 
         Console.WriteLine(deQuery);
-   }
+    }
 
     private static void ShowProducts(DbContextOptions<WebshopContext> options)
     {

@@ -31,6 +31,10 @@ internal class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("datetime2(0)")
             .HasDefaultValueSql("GETDATE()")
             .IsRequired();
+
+        builder
+            .Property(c => c.RowVersion)
+            .IsRowVersion();
     }
 }
 
